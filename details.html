@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Event Details</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f7f5;
+      text-align: center;
+      color: #333;
+    }
+    header {
+      background-color: #2e7d32;
+      color: white;
+      padding: 25px;
+      font-size: 24px;
+      font-weight: bold;
+    }
+    .container {
+      max-width: 650px;
+      margin: 50px auto;
+      padding: 25px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .event-header {
+      font-size: 22px;
+      font-weight: bold;
+      color: #2e7d32;
+      margin-bottom: 20px;
+    }
+    h2 {
+      font-size: 18px;
+      font-weight: bold;
+      margin-top: 25px;
+    }
+    .section {
+      background: #e8f5e9;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+    .photos img {
+      width: 40px;
+      height: 40px;
+      margin: 8px;
+    }
+    .button {
+      display: block;
+      width: 100%;
+      background: #2e7d32;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .button:hover {
+      background: #1b5e20;
+    }
+  </style>
+</head>
+<body>
+
+  <header id="eventTitle">Unknown Event</header>
+
+  <div class="container">
+    <div class="event-header">
+      <span>📍 Recycling Area</span> | <span>⏰ 9:30 - 11:00 AM</span>
+    </div>
+
+    <!-- Participants -->
+    <h2>Participants</h2>
+    <div id="participants" class="section">No participants yet.</div>
+
+    <!-- Photos -->
+    <h2>Photos</h2>
+    <div id="photos" class="section">No images yet.</div>
+
+    <!-- Messages -->
+    <h2>Messages</h2>
+    <div id="messages" class="section">No messages yet.</div>
+
+    <a href="index.html" class="button">Back to Home</a>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      // 1) Read the date from ?date=...
+      const urlParams = new URLSearchParams(window.location.search);
+      const eventDate = urlParams.get("date") || "Unknown Event";
+
+      // 2) Show the event date in the header
+      document.getElementById("eventTitle").textContent = eventDate;
+
+      // ========== Participants ==========
+      const participants = JSON.parse(localStorage.getItem(eventDate)) || [];
+      const participantsDiv = document.getElementById("participants");
+      if (participants.length === 0) {
+        participantsDiv.textContent = "No participants yet.";
+      } else {
+        participantsDiv.innerHTML = participants.map(p => `
+          <p>${p.name} (Grade ${p.grade}) - ${p.email}, Work: ${p.work}</p>
+        `).join("");
+      }
+
+      // ========== Images ==========
+      const imagesKey = eventDate + "_images";
+      const images = JSON.parse(localStorage.getItem(imagesKey)) || [];
+      const photosDiv = document.getElementById("photos");
+      if (images.length === 0) {
+        photosDiv.textContent = "No images yet.";
+      } else {
+        photosDiv.innerHTML = "";
+        images.forEach(imgUrl => {
+          const imgEl = document.createElement("img");
+          imgEl.src = imgUrl;  // can be Base64 or URL
+          imgEl.alt = "Event Photo";
+          imgEl.style.width = "500px";
+imgEl.style.height = "auto";
+imgEl.style.margin = "8px";
+          photosDiv.appendChild(imgEl);
+        });
+      }
+
+      // ========== Messages ==========
+      const messagesKey = eventDate + "_messages";
+      const messages = JSON.parse(localStorage.getItem(messagesKey)) || [];
+      const messagesDiv = document.getElementById("messages");
+      if (messages.length === 0) {
+        messagesDiv.textContent = "No messages yet.";
+      } else {
+        messagesDiv.innerHTML = "";
+        messages.forEach(msg => {
+          const p = document.createElement("p");
+          p.textContent = msg;
+          messagesDiv.appendChild(p);
+        });
+      }
+    });
+    
+  </script>
+
+  
+
+</body>
+</html>

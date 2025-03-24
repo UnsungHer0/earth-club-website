@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin - Manage Events</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      color: #333;
+    }
+    h1, h2, h3 {
+      color: #2e7d32;
+      margin: 10px 0;
+    }
+    .admin-section, .event-block {
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    .title-row {
+      display: flex; 
+      justify-content: space-between;
+      align-items: center;
+    }
+    .participant, .image, .message, .workarea {
+      margin: 5px 0;
+    }
+    .remove-btn, .clear-btn, .add-btn {
+      background: #c62828;
+      color: white;
+      border: none;
+      padding: 5px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+    .remove-btn:hover, .clear-btn:hover, .add-btn:hover {
+      background: #b71c1c;
+    }
+    input[type=text] {
+      margin-top: 5px;
+      display: block;
+      width: 90%;
+      padding: 5px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+    /* Hide adminMode or detailsMode by default; we show them by URL param */
+    #adminMode, #detailsMode {
+      display: none;
+    }
+
+    /* Container styling for details mode */
+    #detailsMode .container {
+      max-width: 650px;
+      margin: 20px auto;
+      padding: 25px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    #eventTitle {
+      background-color: #2e7d32;
+      color: white;
+      padding: 25px;
+      font-size: 24px;
+      font-weight: bold;
+      text-align: center;
+      margin: 0 -25px 20px; /* visually merges with container */
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+    }
+    .photos img {
+      width: 40px;
+      height: 40px;
+      margin: 8px;
+    }
+    .button {
+      display: block;
+      width: 100%;
+      background: #2e7d32;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      text-decoration: none;
+      margin-top: 20px;
+      text-align: center;
+    }
+    .button:hover {
+      background: #1b5e20;
+    }
+
+    /* Drag-and-drop zone styling */
+    .drop-zone {
+      border: 2px dashed #999;
+      border-radius: 5px;
+      padding: 10px;
+      text-align: center;
+      margin-top: 10px;
+      color: #666;
+    }
+    .drop-zone.dragover {
+      background-color: #eee;
+      border-color: #666;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ADMIN MODE (shown if NO ?date=... in URL) -->
+<div id="adminMode">
+  <h1>Admin - Manage Events</h1>
+  <div id="adminContent"></div>
+</div>
+
+<!-- DETAILS MODE (shown if ?date=... in URL) -->
+<div id="detailsMode">
+  <div class="container">
+    <h1 id="eventTitle">Unknown Event</h1>
+
+    <div class="event-header">
+      <span>📍 Recycling Area</span> | <span>⏰ 9:30 - 11:00 AM</span>
+    </div>
+
+    <h2>Participants</h2>
+    <div id="participants" class="admin-section">No participants yet.</div>
+
+    <h2>Photos</h2>
+    <div id="photos" class="admin-section">No images yet.</div>
+
+    <h2>Messages</h2>
+    <div id="messages" class="admin-section">No messages yet.</div>
+
+    <a href="home.html" class="button">Back to Home</a>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const eventDate = urlParams.get('date'); // If null => admin mode
+
+  // We define 3 known events so they appear even if empty
+  let knownEvents = [
+    "March 29, 2025",
+    "April 19, 2025",
+    "May 17, 2025"
+  ];
+
+  // If we have ?date=..., show details mode
+  if (eventDate) {
+    // ==========================
+    // DETAILS MODE
+    // ==========================
+    document.getElementById('detailsMode').style.display = 'block';
+
+    const eventTitle = document.getElementById('eventTitle');
+    eventTitle.textContent = eventDate;
+
+    // 1) Participants
+    const participants = JSON.parse(localStorage.getItem(eventDate)) || [];
+    const participantsDiv = document.getElementById('participants');
+    if (participants.length === 0) {
+      participantsDiv.textContent = "No participants yet.";
+    } else {
+      participantsDiv.innerHTML = participants.map(p => `
+        <p>${p.name} (Grade ${p.grade}) - ${p.email}, Work: ${p.work}</p>
+      `).join("");
+    }
+
+    // 2) Images
+    const imagesKey = eventDate + "_images";
+    const images = JSON.parse(localStorage.getItem(imagesKey)) || [];
+    const photosDiv = document.getElementById("photos");
+    if (images.length === 0) {
+      photosDiv.textContent = "No images yet.";
+    } else {
+      photosDiv.innerHTML = "";
+      images.forEach(imgUrl => {
+        const imgEl = document.createElement("img");
+        imgEl.src = imgUrl;
+        imgEl.alt = "Event Photo";
+        imgEl.style.margin = "8px";
+        // If you want bigger images:
+        // imgEl.style.width = "200px";
+        // imgEl.style.height = "auto";
+        photosDiv.appendChild(imgEl);
+      });
+    }
+
+    // 3) Messages
+    const messagesKey = eventDate + "_messages";
+    const messages = JSON.parse(localStorage.getItem(messagesKey)) || [];
+    const messagesDiv = document.getElementById("messages");
+    if (messages.length === 0) {
+      messagesDiv.textContent = "No messages yet.";
+    } else {
+      messagesDiv.innerHTML = "";
+      messages.forEach(msg => {
+        const p = document.createElement("p");
+        p.textContent = msg;
+        messagesDiv.appendChild(p);
+      });
+    }
+
+  } else {
+    // ==========================
+    // ADMIN MODE
+    // ==========================
+    document.getElementById('adminMode').style.display = 'block';
+
+    // 1) Combine known events with any from localStorage
+    let eventDates = new Set(knownEvents); // use a Set so no duplicates
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k.includes('_images') || k.includes('_messages') || k.includes('_workareas')) {
+        // e.g. 'March 29, 2025_images'
+        const base = k.replace('_images','').replace('_messages','').replace('_workareas','');
+        eventDates.add(base);
+      } else {
+        // assume participants
+        eventDates.add(k);
+      }
+    }
+
+    // Convert set to array
+    let finalEvents = Array.from(eventDates);
+
+    const adminContent = document.getElementById('adminContent');
+    finalEvents.forEach(date => {
+      const eventBlock = document.createElement('div');
+      eventBlock.className = 'event-block';
+
+      // Title row
+      const titleRow = document.createElement('div');
+      titleRow.className = 'title-row';
+
+      const h2 = document.createElement('h2');
+      h2.textContent = date;
+      titleRow.appendChild(h2);
+
+      // Clear all participants for this event (only participants)
+      const clearAllBtn = document.createElement('button');
+      clearAllBtn.className = 'remove-btn';
+      clearAllBtn.textContent = 'Clear All Participants';
+      clearAllBtn.onclick = function() {
+        // Only remove participants array, not images/messages
+        localStorage.removeItem(date);
+        location.reload();
+      };
+      titleRow.appendChild(clearAllBtn);
+
+      eventBlock.appendChild(titleRow);
+
+      // PARTICIPANTS
+      const participants = JSON.parse(localStorage.getItem(date)) || [];
+      if (participants.length === 0) {
+        const p = document.createElement('p');
+        p.textContent = 'No participants yet.';
+        eventBlock.appendChild(p);
+      } else {
+        participants.forEach((pObj, idx) => {
+          const partDiv = document.createElement('div');
+          partDiv.className = 'participant';
+          partDiv.textContent = `${pObj.name} (Grade ${pObj.grade}) - ${pObj.email}, Work: ${pObj.work}`;
+
+          const removeBtn = document.createElement('button');
+          removeBtn.className = 'remove-btn';
+          removeBtn.textContent = 'Remove';
+          removeBtn.style.marginLeft = '10px';
+          removeBtn.onclick = function() {
+            participants.splice(idx, 1);
+            localStorage.setItem(date, JSON.stringify(participants));
+            location.reload();
+          };
+          partDiv.appendChild(removeBtn);
+          eventBlock.appendChild(partDiv);
+        });
+      }
+
+      // IMAGES
+      const imagesKey = date + '_images';
+      let images = JSON.parse(localStorage.getItem(imagesKey)) || [];
+
+      const imgTitle = document.createElement('h3');
+      imgTitle.textContent = 'Images';
+      eventBlock.appendChild(imgTitle);
+
+      if (images.length === 0) {
+        const noImg = document.createElement('p');
+        noImg.textContent = 'No images yet.';
+        eventBlock.appendChild(noImg);
+      } else {
+        images.forEach((imgUrl, iIdx) => {
+          const imgDiv = document.createElement('div');
+          imgDiv.className = 'image';
+          imgDiv.textContent = imgUrl;
+
+          const removeImgBtn = document.createElement('button');
+          removeImgBtn.className = 'remove-btn';
+          removeImgBtn.textContent = 'Remove';
+          removeImgBtn.style.marginLeft = '10px';
+          removeImgBtn.onclick = function() {
+            images.splice(iIdx, 1);
+            localStorage.setItem(imagesKey, JSON.stringify(images));
+            location.reload();
+          };
+          imgDiv.appendChild(removeImgBtn);
+          eventBlock.appendChild(imgDiv);
+        });
+      }
+      // Add new image
+      const newImgInput = document.createElement('input');
+      newImgInput.type = 'text';
+      newImgInput.placeholder = 'Add image URL';
+      newImgInput.style.display = 'block';   // bigger block input
+      newImgInput.style.width = '90%';
+      newImgInput.style.marginTop = '5px';
+      
+      
+
+      const addImgBtn = document.createElement('button');
+      addImgBtn.className = 'add-btn';
+      addImgBtn.style.background = '#2e7d32';
+      addImgBtn.style.color = 'white';
+      addImgBtn.textContent = 'Add Image';
+      addImgBtn.onclick = function() {
+        const val = newImgInput.value.trim();
+        if (!val) return;
+        images.push(val);
+        localStorage.setItem(imagesKey, JSON.stringify(images));
+        location.reload();
+      };
+      eventBlock.appendChild(newImgInput);
+      eventBlock.appendChild(addImgBtn);
+
+      // Drag-and-drop zone
+      const dropZone = document.createElement('div');
+      dropZone.className = 'drop-zone';
+      dropZone.textContent = 'Or drop an image file here';
+      dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+      });
+      dropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+      });
+      dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith('image/')) {
+          const reader = new FileReader();
+          reader.onload = function(evt) {
+            const dataUrl = evt.target.result; // base64 string
+            images.push(dataUrl);
+            localStorage.setItem(imagesKey, JSON.stringify(images));
+            location.reload();
+          };
+          reader.readAsDataURL(file);
+        } else {
+          alert('Please drop an image file!');
+        }
+      });
+      eventBlock.appendChild(dropZone);
+
+      // MESSAGES
+      const messagesKey = date + '_messages';
+      let messages = JSON.parse(localStorage.getItem(messagesKey)) || [];
+
+      const msgTitle = document.createElement('h3');
+      msgTitle.textContent = 'Messages';
+      eventBlock.appendChild(msgTitle);
+
+      if (messages.length === 0) {
+        const noMsg = document.createElement('p');
+        noMsg.textContent = 'No messages yet.';
+        eventBlock.appendChild(noMsg);
+      } else {
+        messages.forEach((msgStr, mIdx) => {
+          const msgDiv = document.createElement('div');
+          msgDiv.className = 'message';
+          msgDiv.textContent = msgStr;
+
+          const removeMsgBtn = document.createElement('button');
+          removeMsgBtn.className = 'remove-btn';
+          removeMsgBtn.textContent = 'Remove';
+          removeMsgBtn.style.marginLeft = '10px';
+          removeMsgBtn.onclick = function() {
+            messages.splice(mIdx, 1);
+            localStorage.setItem(messagesKey, JSON.stringify(messages));
+            location.reload();
+          };
+          msgDiv.appendChild(removeMsgBtn);
+          eventBlock.appendChild(msgDiv);
+        });
+      }
+      // Add new message
+      const newMsgInput = document.createElement('input');
+      newMsgInput.type = 'text';
+      newMsgInput.placeholder = 'Add a message';
+      const addMsgBtn2 = document.createElement('button');
+      addMsgBtn2.className = 'add-btn';
+      addMsgBtn2.style.background = '#2e7d32';
+      addMsgBtn2.style.color = 'white';
+      addMsgBtn2.textContent = 'Add Message';
+      addMsgBtn2.onclick = function() {
+        const val = newMsgInput.value.trim();
+        if (!val) return;
+        messages.push(val);
+        localStorage.setItem(messagesKey, JSON.stringify(messages));
+        location.reload();
+      };
+      eventBlock.appendChild(newMsgInput);
+      eventBlock.appendChild(addMsgBtn2);
+
+      // WORK AREAS for this event
+      // 4 defaults if no custom array
+      const defaultEventWorkareas = [
+        "Sorting Recyclables",
+        "Collecting Materials",
+        "Educating Participants",
+        "Supervising Drop-off"
+      ];
+
+      const workareasKey = date + '_workareas';
+      let eventWorkareas = JSON.parse(localStorage.getItem(workareasKey));
+
+      if (!eventWorkareas) {
+        // If no custom array stored, start with the 4 defaults
+        eventWorkareas = [...defaultEventWorkareas];
+        localStorage.setItem(workareasKey, JSON.stringify(eventWorkareas));
+      }
+
+      const waTitle = document.createElement('h3');
+      waTitle.textContent = 'Work Areas for This Event';
+      eventBlock.appendChild(waTitle);
+
+      if (eventWorkareas.length === 0) {
+        const noWA = document.createElement('p');
+        noWA.textContent = 'No custom work areas.';
+        eventBlock.appendChild(noWA);
+      } else {
+        eventWorkareas.forEach((wa, wIdx) => {
+          const waDiv = document.createElement('div');
+          waDiv.className = 'workarea';
+          waDiv.textContent = wa;
+
+          const removeWABtn = document.createElement('button');
+          removeWABtn.className = 'remove-btn';
+          removeWABtn.textContent = 'Remove';
+          removeWABtn.style.marginLeft = '10px';
+          removeWABtn.onclick = function() {
+            eventWorkareas.splice(wIdx, 1);
+            localStorage.setItem(workareasKey, JSON.stringify(eventWorkareas));
+            location.reload();
+          };
+          waDiv.appendChild(removeWABtn);
+
+          eventBlock.appendChild(waDiv);
+        });
+      }
+
+      // Add new event-specific work area
+      const newWAInput = document.createElement('input');
+      newWAInput.type = 'text';
+      newWAInput.placeholder = 'Add a work area for this event';
+      newWAInput.style.display = 'block';
+      newWAInput.style.width = '90%';
+      newWAInput.style.marginTop = '5px';
+
+      const addWABtn = document.createElement('button');
+      addWABtn.className = 'add-btn';
+      addWABtn.style.background = '#2e7d32';
+      addWABtn.style.color = 'white';
+      addWABtn.textContent = 'Add Work Area';
+      addWABtn.onclick = function() {
+        const val = newWAInput.value.trim();
+        if (!val) return;
+        eventWorkareas.push(val);
+        localStorage.setItem(workareasKey, JSON.stringify(eventWorkareas));
+        location.reload();
+      };
+      eventBlock.appendChild(newWAInput);
+      eventBlock.appendChild(addWABtn);
+
+      adminContent.appendChild(eventBlock);
+    });
+
+  }
+});
+</script>
+
+</body>
+</html>

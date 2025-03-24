@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Earth Club - Community Recycling</title>
+  <style>
+    /* General Styling */
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f7f5;
+      text-align: center;
+      color: #333;
+    }
+    
+    /* Header */
+    header {
+      background-color: #2e7d32;
+      color: white;
+      padding: 20px;
+      font-size: 28px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Main Content */
+    main {
+      padding: 40px;
+    }
+
+    h2 {
+      font-size: 26px;
+      margin-bottom: 10px;
+    }
+
+    p {
+      font-size: 18px;
+      color: #555;
+      max-width: 600px;
+      margin: 0 auto 30px;
+      line-height: 1.6;
+    }
+
+    /* Recycling Dates Section */
+    .recycling-dates {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 30px;
+      padding: 20px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .date-card {
+      background: white;
+      padding: 20px;
+      width: 280px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .date-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+    }
+
+    .date-card h3 {
+      font-size: 22px;
+      margin-bottom: 10px;
+      color: #2e7d32;
+    }
+
+    .date-card p {
+      font-size: 16px;
+      color: #666;
+      margin-bottom: 15px;
+    }
+
+    /* Buttons */
+    .btn {
+      background-color: #2e7d32;
+      color: white;
+      padding: 10px 15px;
+      text-decoration: none;
+      border-radius: 5px;
+      display: inline-block;
+      font-size: 16px;
+      transition: background 0.3s ease;
+      outline: none;  /* Remove default focus outline */
+      box-shadow: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background-color: #1b5e20;
+    }
+
+    .btn:focus {
+      outline: none;
+      box-shadow: none;
+    }
+
+    /* Sign-up Section */
+    .signup-container {
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>🌍 Earth Club - Community Recycling</header>
+
+  <main>
+    <h2>Upcoming Community Recycling Events</h2>
+    <p>Join us in making a difference! Check out our upcoming recycling events and sign up to participate.</p>
+
+    <div class="recycling-dates">
+      <!-- 1) March 29, 2025 -->
+      <div class="date-card" id="march29Card">
+        <h3>March 29, 2025</h3>
+        <p>📍 Location: Recycling Area</p>
+        <p>⏰ Time: 9:30 - 11:00 AM</p>
+        <!-- Participant count goes here -->
+        <p class="participants-count"></p>
+        <button class="btn"
+          onclick="window.location.href='details.html?date=March%2029%2C%202025'">
+          View Details
+        </button>
+      </div>
+
+      <!-- 2) April 19, 2025 -->
+      <div class="date-card" id="april19Card">
+        <h3>April 19, 2025</h3>
+        <p>📍 Location: Recycling Area</p>
+        <p>⏰ Time: 9:30 - 11:00 AM</p>
+        <p class="participants-count"></p>
+        <button class="btn"
+          onclick="window.location.href='details.html?date=April%2019%2C%202025'">
+          View Details
+        </button>
+      </div>
+
+      <!-- 3) May 17, 2025 -->
+      <div class="date-card" id="may17Card">
+        <h3>May 17, 2025</h3>
+        <p>📍 Location: Recycling Area</p>
+        <p>⏰ Time: 9:30 - 11:00 AM</p>
+        <p class="participants-count"></p>
+        <button class="btn"
+          onclick="window.location.href='details.html?date=May%2017%2C%202025'">
+          View Details
+        </button>
+      </div>
+    </div>
+
+    <div class="signup-container">
+      <a href="signup.html" class="btn">Sign Up for an Event</a>
+    </div>
+  </main>
+
+  <!-- SCRIPT: Load participant counts for each event -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      // Map each date to its card ID
+      const eventMap = {
+        "March 29, 2025": "march29Card",
+        "April 19, 2025": "april19Card",
+        "May 17, 2025": "may17Card"
+      };
+
+      // For each event date, load participants from localStorage
+      for (const [dateString, cardId] of Object.entries(eventMap)) {
+        const participants = JSON.parse(localStorage.getItem(dateString)) || [];
+        
+        // Find the card & its <p class="participants-count">
+        const card = document.getElementById(cardId);
+        if (card) {
+          const countEl = card.querySelector(".participants-count");
+          if (countEl) {
+            // Show how many participants have signed up
+            countEl.textContent = participants.length > 0
+              ? `Participants: ${participants.length}`
+              : "";
+          }
+        }
+      }
+    });
+  </script>
+
+
+  
+</body>
+</html>
